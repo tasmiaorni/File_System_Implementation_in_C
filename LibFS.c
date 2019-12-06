@@ -219,7 +219,6 @@ static int bitmap_first_unused(int start, int num, int nbits)
             {
                 char temp = tempArray[j] >> bit;   // take a bit
                 temp = temp & 1;
-
                 if( temp == 0)                   // check whether the bit is
                 {
                     tempArray[j] =tempArray[j]  | (1 << bit);   // set the bit to 1
@@ -229,8 +228,6 @@ static int bitmap_first_unused(int start, int num, int nbits)
                 bit--;
                 index++;
             }
-            //int temp = tempArray[j];
-            //if (loopUp(temp))printf("matched");
         }
     }
     return -1;
@@ -247,7 +244,6 @@ static int bitmap_reset(int start, int num, int ibit)
     {
         char tempArray[SECTOR_SIZE]; // take an empty  array of 512 byte for reading data from disk
         Disk_Read(start+i,tempArray);  // read a byte from disk in tempArray
-
         for (int j=0; j<SECTOR_SIZE; j++)     // loop through each byte of a sector
         {
             int bit=7;
@@ -262,7 +258,6 @@ static int bitmap_reset(int start, int num, int ibit)
                 nthBit++;
                 bit--;
             }
-
         }
     }
     return -1;
@@ -472,8 +467,8 @@ int add_inode(int type, int parent_inode, char* file)
     //int group = parent->size/DIRENTS_PER_SECTOR;
     int group = parent->direntNo/DIRENTS_PER_SECTOR;
     char dirent_buffer[SECTOR_SIZE];
-    if(group*DIRENTS_PER_SECTOR == parent->size)
-        //if(group*DIRENTS_PER_SECTOR == parent->direntNo)
+    //if(group*DIRENTS_PER_SECTOR == parent->size)
+    if(group*DIRENTS_PER_SECTOR == parent->direntNo)
     {
         // new disk sector is needed
         int newsec = bitmap_first_unused(SECTOR_BITMAP_START_SECTOR, SECTOR_BITMAP_SECTORS, SECTOR_BITMAP_SIZE);
@@ -557,12 +552,10 @@ int create_file_or_directory(int type, char* pathname)
 int remove_inode(int type, int parent_inode, int child_inode)
 {
     /* YOUR CODE */
-
     // first retrieve the child inode
     int *inode_sector;
     char *inode_buffer = getSectorFromInode(child_inode, &inode_sector); // get the sector no containing the child inode
     inode_t* child= getInodeFromSector(inode_sector, child_inode, inode_buffer);  // get the child inode from that sector
-
     // child inode is a directory with more than one directory or file. so we can't delete it
     if(child->type && child->size ) return -2;
 
@@ -579,12 +572,10 @@ int remove_inode(int type, int parent_inode, int child_inode)
             Disk_Write(child->data[sector], byteValue);
         }
     }
-
     // Next remove  the  child inode from disk and update inode  bitmap accordingly
     bitmap_reset(INODE_BITMAP_START_SECTOR, INODE_BITMAP_SECTORS, child_inode);
     memset(child, 0, sizeof(inode_t));
     Disk_Write(inode_sector, inode_buffer) ;
-
     // now deal with parent inode
     int * parentSector;
     char* parent_buffer = getSectorFromInode(parent_inode, &parentSector); // get the sector no containing the parent inode
@@ -595,11 +586,10 @@ int remove_inode(int type, int parent_inode, int child_inode)
         dprintf("... error: parent inode is not directory\n");
         return -1; // parent not directory
     }
-
     // now find the correct sector of parent inode to delete the child inode , here parent is always a directory
     for (int sector=0; sector<MAX_SECTORS_PER_FILE; sector++)
     {
-        if (parent->data[sector])
+       if (parent->data[sector])
         {
             char sectorArray[SECTOR_SIZE];
             if (Disk_Read(parent->data[sector],sectorArray)) return -1;;
